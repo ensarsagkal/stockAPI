@@ -1,37 +1,53 @@
 "use strict"
-/* -------------------------------------------------------
-    NODEJS EXPRESS | CLARUSWAY FullStack Team
-------------------------------------------------------- */
-// app.use(findSearchSortPage):
 
-module.exports = (req, res, next) => {  
-// Searching & Sorting & Pagination:  
+module.exports = (req, res, next) => {
 
-    // SEARCHING: URL?search[key1]=value1&search[key2]=value2
+    /* FILTERING & SEARCHING & SORTING & PAGINATION */
+
+    // ### FILTERING ###
+
+    // URL?filter[key1]=value1&filter[key2]=value2
+    const filter = req.query?.filter || {}
+    // console.log(filter)
+
+    // ### SEARCHING ###
+
+    // URL?search[key1]=value1&search[key2]=value2
+    // https://www.mongodb.com/docs/manual/reference/operator/query/regex/
     const search = req.query?.search || {}
-    for (let key in search) search[key] = { $regex: search[key], $options: 'i' }
+    // console.log(search)
+    // const example = { title: { $regex: 'test', $options: 'i' } } // const example = { title: /test/ }
+    for (let key in search) search[key] = { $regex: search[key], $options: 'i' } // i: case insensitive
+    // console.log(search)
 
-    // Cancelled -> SORTING: URL?sort[key1]=1&sort[key2]=-1 (1:ASC, -1:DESC)
-    // Mongoose=^8.0 -> SORTING: URL?sort[key1]=asc&sort[key2]=desc (asc: A->Z - desc: Z->A)
+    // ### SORTING ###
+
+    // URL?sort[key1]=asc&sort[key2]=desc
+    // asc: A-Z - desc: Z-A
     const sort = req.query?.sort || {}
+    // console.log(sort)
 
-    // PAGINATION: URL?page=1&limit=10
-    // LIMIT:
+    // ### PAGINATION ###
+
+    // URL?page=3&limit=10
     let limit = Number(req.query?.limit)
-    limit = limit > 0 ? limit : Number(process.env?.PAGE_SIZE || 20)
-    // PAGE:
+    // console.log(limit)
+    limit = limit > 0 ? limit : Number(process.env.PAGE_SIZE || 20)
+    // console.log(typeof limit, limit)
+
     let page = Number(req.query?.page)
-    page = (page > 0 ? page : 1) - 1
-    // SKIP:
+    page = page > 0 ? (page - 1) : 0 // Backend'de sayfa sayısı her zaman (page - 1)'dir.
+    // console.log(typeof page, page)
+
     let skip = Number(req.query?.skip)
     skip = skip > 0 ? skip : (page * limit)
+    // console.log(typeof skip, skip)
 
-    // Run SearchingSortingPagination engine for Model:
-    res.getModelList = async function (Model, customFilter = {}, populate = null) {
+    /* FILTERING & SEARCHING & SORTING & PAGINATION */
 
-        
-
-        return await Model.find({ ...filters, ...search,...customFilter  }).sort(sort).skip(skip).limit(limit).populate(populate)
+    // Run for output:
+    res.getModelList = async (Model, customFilter = {}, populate = null) => {
+        return await Model.find({ ...filter, ...search, ...customFilter }).sort(sort).skip(skip).limit(limit).populate(populate)
     }
 
     // Details:
@@ -39,9 +55,8 @@ module.exports = (req, res, next) => {
 
         const data = await Model.find({ ...filter, ...search, ...customFilter })
 
-        const dataCount = await Model.count(filtersAndSearch)
-
         let details = {
+            filter,
             search,
             sort,
             skip,
@@ -51,14 +66,14 @@ module.exports = (req, res, next) => {
                 previous: (page > 0 ? page : false),
                 current: page + 1,
                 next: page + 2,
-                total: Math.ceil(dataCount / limit)
+                total: Math.ceil(data.length / limit)
             },
-            totalRecords: dataCount,
+            totalRecords: data.length,
         }
         details.pages.next = (details.pages.next > details.pages.total ? false : details.pages.next)
         if (details.totalRecords <= limit) details.pages = false
         return details
     }
-
+    
     next()
 }
