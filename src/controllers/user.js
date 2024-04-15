@@ -5,6 +5,8 @@
 // User Controller:
 
 const User = require('../models/user')
+const Token = require('../models/token')
+const passwordEncrypt = require('../helpers/passwordEncrypt')
 
 module.exports = {
 
@@ -30,13 +32,47 @@ module.exports = {
 
         res.status(200).send({
             error: false,
-            details: await res.getModelListDetails(User),
+            details: await res.getModelListDetails(User, customFilters),
             data
         })
 
     },
 
     create: async (req, res) => {
+        /*
+            #swagger.tags = ["Users"]
+            #swagger.summary = "Create User"
+            #swagger.parameters['body'] = {
+                in: 'body',
+                required: true,
+                schema: {
+                    "username": "test",
+                    "password": "1234",
+                    "email": "test@site.com",
+                    "firstName": "test",
+                    "lastName": "test",
+                }
+            }
+        */
+
+        // Yeni kayıtlarda admin/staff = false
+        req.body.isStaff = false
+        req.body.isAdmin = false
+
+        const data = await User.create(req.body)
+
+        /* AUTO LOGIN */
+        const tokenData = await Token.create({
+            userId: data._id,
+            token: passwordEncrypt(data._id + Date.now())
+        })
+        /* AUTO LOGIN */
+
+        res.status(201).send({
+            error: false,
+            token: tokenData.token,
+            data
+        })
 
     },
 
