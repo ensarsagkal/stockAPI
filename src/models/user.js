@@ -35,9 +35,6 @@ const { mongoose } = require('../configs/dbConnection')
     "isAdmin": false
 }
 /* ------------------------------------------------------- */
-// User Model:
-
-const passwordEncrypt = require('../helpers/passwordEncrypt')
 
 const UserSchema = new mongoose.Schema({
 
@@ -46,42 +43,34 @@ const UserSchema = new mongoose.Schema({
         trim: true,
         required: true,
         unique: true,
+        index: true
     },
 
     password: {
         type: String,
         trim: true,
-        required: true,
-        set: (password) => passwordEncrypt(password),
-        // selected:false 
+        required: true
     },
 
     email: {
         type: String,
         trim: true,
-        required: [true, 'Email field must be required'],
-        unique: [true, 'There is this email. Email field must be unique'],
-        // validate: [
-        //     (email) => email.includes('@') && email.includes('.'),
-        //     'Email type is not correct.'
-        // ]
-        // email regex /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-        // regexr.com for test
-        validate: [
-            // (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email),
-            // 'Email type is not correct.'
-            (email) => { 
-                const regexEmailCheck=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-                return regexEmailCheck.test(email)                
-            },
-            'Email type is not correct.'
-            
-        ]
+        required: true,
+        unique: true,
+        index: true
     },
 
-    firstName: String,
+    firstName: {
+        type: String,
+        trim: true,
+        required: true
+    },
 
-    lastName: String,
+    lastName: {
+        type: String,
+        trim: true,
+        required: true
+    },
 
     isActive: {
         type: Boolean,
@@ -98,7 +87,12 @@ const UserSchema = new mongoose.Schema({
         default: false,
     },
 
-}, { collection: 'users', timestamps: true })
+}, {
+    collection: 'users',
+    timestamps: true
+})
 
 /* ------------------------------------------------------- */
+// Exports:
+
 module.exports = mongoose.model('User', UserSchema)
