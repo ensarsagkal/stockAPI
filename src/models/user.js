@@ -35,7 +35,7 @@ const { mongoose } = require('../configs/dbConnection')
     "isAdmin": false
 }
 /* ------------------------------------------------------- */
-
+// User Model
 const UserSchema = new mongoose.Schema({
 
     username: {
