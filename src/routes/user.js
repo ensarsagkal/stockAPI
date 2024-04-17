@@ -12,6 +12,8 @@ const user = require('../controllers/user')
 // URL: /users
 
 router.route('/')
+    // .get(permissions.isAdmin, user.list)
+    //? user.list içinde isAdmin kontrolü yaptık:
     .get(permissions.isLogin, user.list)
     .post(user.create)
 
