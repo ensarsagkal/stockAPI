@@ -117,6 +117,7 @@ module.exports = {
 
         // Yeni kayıtlarda admin/staff durumunu değiştiremez:
         if (!req.user?.isAdmin) {
+            delete req.body.isActive
             delete req.body.isStaff
             delete req.body.isAdmin
         }
